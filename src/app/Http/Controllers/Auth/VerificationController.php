@@ -65,10 +65,10 @@ class VerificationController extends Controller
             // 记录积分变动
             UserPointRecord::create([
                 'uid' => $inviter->uid,
-                'action' => '邀请奖励',
+                'action' => 'Invitation Reward',
                 'point' => $inviterPoint,
                 'rest' => $inviter->point,
-                'remark' => '邀请用户 ' . $user->username . ' 注册并验证邮箱获得奖励'
+                'remark' => 'Rewarded for inviting user ' . $user->username . ' who registered and verified email'
             ]);
         }
         
@@ -80,10 +80,10 @@ class VerificationController extends Controller
             // 记录积分变动
             UserPointRecord::create([
                 'uid' => $user->uid,
-                'action' => '邀请注册奖励',
+                'action' => 'Registration Bonus',
                 'point' => $inviteePoint,
                 'rest' => $user->point,
-                'remark' => '通过 ' . $inviter->username . ' 的邀请链接注册并验证邮箱获得奖励'
+                'remark' => 'Bonus for registering through ' . $inviter->username . '\'s invitation link and verifying email'
             ]);
         }
         

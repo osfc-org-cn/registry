@@ -219,12 +219,12 @@ class IndexController extends Controller
         
         // 给邀请人发放积分
         if ($inviterPoint > 0) {
-            User::point($inviter->uid, '邀请奖励', $inviterPoint, '邀请用户 ' . $user->username . ' 注册并验证邮箱获得奖励');
+            User::point($inviter->uid, 'Invitation Reward', $inviterPoint, 'Rewarded for inviting user ' . $user->username . ' who registered and verified email');
         }
         
         // 给被邀请人发放积分
         if ($inviteePoint > 0) {
-            User::point($user->uid, '邀请注册奖励', $inviteePoint, '通过 ' . $inviter->username . ' 的邀请链接注册并验证邮箱获得奖励');
+            User::point($user->uid, 'Registration Bonus', $inviteePoint, 'Bonus for registering through ' . $inviter->username . '\'s invitation link and verifying email');
         }
         
         // 更新邀请记录状态

@@ -55,7 +55,7 @@ class Handler extends ExceptionHandler
     public function render($request, Exception $exception)
     {
         if ($exception instanceof NotFoundHttpException) {
-            return $this->response($request, 404, '页面不存在');
+            return $this->response($request, 404, 'Page Not Found');
         } elseif ($exception instanceof HttpException) {
             if ($exception->getStatusCode() === 405) {
                 return $this->response($request, $exception->getStatusCode(), 'MethodNotAllowedHttpException');
