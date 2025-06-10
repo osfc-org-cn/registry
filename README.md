@@ -19,6 +19,11 @@
 
 - Original KLDNS requirements
 
+## Posts
+
+- [Made in error](https://mie.opens.ltd/d/6)
+- NodeLoc
+
 ## License
 
 This project is open source under the MIT License
