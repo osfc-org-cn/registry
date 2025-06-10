@@ -12,7 +12,8 @@
 1. Download `vendor.zip` file from Releases
 2. Extract `vendor.zip` to get the vendor folder
 3. Copy the vendor folder to the src directory
-4. Installation complete, you can start using it now
+4. Visit the website homepage and follow the setup wizard
+5. Installation complete, you can start using it now
 
 ## Requirements
 
