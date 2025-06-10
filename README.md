@@ -26,7 +26,7 @@
 ## Posts
 
 - [Made in error](https://mie.opens.ltd/d/6)
-- NodeLoc
+- [NodeLoc](https://nodeloc.cc/t/topic/47918/)
 
 ## License
 
