@@ -1,0 +1,65 @@
+/* 强制隐藏所有加载层的按钮 */
+.layui-layer-loading .layui-layer-btn,
+.layui-layer-loading.layui-layer .layui-layer-btn,
+div[type="loading"] .layui-layer-btn,
+div[type="loading"].layui-layer .layui-layer-btn {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    z-index: -1 !important;
+}
+
+/* 强制设置加载层的样式 */
+.layui-layer-loading {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    min-width: auto !important;
+}
+
+.layui-layer-loading .layui-layer-content {
+    width: 60px !important;
+    height: 60px !important;
+    background-color: rgba(0, 0, 0, 0.7) !important;
+    border-radius: 5px !important;
+    overflow: hidden !important;
+}
+
+/* 修复z-index问题 */
+#layui-layer-shade0, 
+#layui-layer-shade1, 
+#layui-layer-shade2,
+#layui-layer-shade3,
+#layui-layer-shade4,
+#layui-layer-shade5 {
+    z-index: 19891014 !important;
+}
+
+/* 确保加载层在最上层 */
+.layui-layer-loading,
+div[type="loading"].layui-layer {
+    z-index: 19891015 !important;
+}
+
+/* 修复按钮问题 */
+.layui-layer-btn {
+    min-height: 0 !important;
+}
+
+/* 直接隐藏 OK 按钮 */
+.layui-layer-loading button,
+.layui-layer-loading .layui-layer-btn a {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* 强制设置加载图标的样式 */
+.layui-layer-ico.layui-layer-loading {
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-size: 24px 24px !important;
+} 
