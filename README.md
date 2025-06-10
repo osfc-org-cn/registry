@@ -18,6 +18,10 @@
 ## Requirements
 
 - Original KLDNS requirements
+- PHP 7.2 recommended
+- MySQL
+- Proper directory permissions
+- And brains
 
 ## Posts
 
