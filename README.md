@@ -18,6 +18,15 @@
 ## Requirements
 
 - Original KLDNS requirements
+- PHP 7.2 recommended
+- MySQL
+- Proper directory permissions
+- And brains
+
+## Posts
+
+- [Made in error](https://mie.opens.ltd/d/6)
+- [NodeLoc](https://nodeloc.cc/t/topic/47918/)
 
 ## License
 
