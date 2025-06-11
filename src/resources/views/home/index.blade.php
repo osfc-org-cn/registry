@@ -164,6 +164,7 @@
                             <option value="AAAA">AAAA</option>
                             <option value="TXT">TXT</option>
                             <option value="MX">MX</option>
+                            <option value="NS" v-if="nsEnabled">NS</option>
                         </select>
                     </div>
                     <div class="mdui-col-xs-6 mdui-col-sm-3">
@@ -301,6 +302,7 @@
                                         <option value="CNAME">CNAME</option>
                                         <option value="TXT">TXT</option>
                                         <option value="MX">MX</option>
+                                        <option value="NS" v-if="nsEnabled">NS</option>
                                     </select>
                                 </div>
                             </div>
@@ -367,7 +369,8 @@
                 selectDid: 0,
                 desc: '',
                 isSubmitting: false,
-                subdomainPoint: {{ config('sys.subdomain_point', 0) }}
+                subdomainPoint: @json(config('sys.subdomain_point', 0)),
+                nsEnabled: @json(config('sys.domain.ns_enabled', 0) ? true : false)
             },
             methods: {
                 getPages: function() {
@@ -411,6 +414,7 @@
                         case 'CNAME': return 'Enter hostname (e.g. example.com)';
                         case 'TXT': return 'Enter text value';
                         case 'MX': return 'Enter mail server hostname';
+                        case 'NS': return 'Enter nameserver hostname (e.g. ns1.example.com)';
                         default: return 'Enter Record Value';
                     }
                 },

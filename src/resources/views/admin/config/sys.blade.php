@@ -245,6 +245,28 @@
                                 <div class="input_tips">用户添加自己域名下的二级域名（如example.oooo.osfc.org.cn）所需的积分，设为0表示免费</div>
                             </div>
                         </div>
+                        
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">启用 Fuckabuser</label>
+                            <div class="col-sm-9">
+                                <select name="domain[fuckabuser_enabled]" :value="{{ config('sys.domain.fuckabuser_enabled', 1) }}" class="form-control">
+                                    <option value="0">关闭</option>
+                                    <option value="1">开启</option>
+                                </select>
+                                <div class="input_tips">是否启用 Fuckabuser API 检查用户添加的 IP 地址。启用后，系统会检查 IP 是否在黑名单中，如果在黑名单中则拒绝添加。</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">允许 NS 记录</label>
+                            <div class="col-sm-9">
+                                <select name="domain[ns_enabled]" :value="{{ config('sys.domain.ns_enabled', 0) }}" class="form-control">
+                                    <option value="0">关闭</option>
+                                    <option value="1">开启</option>
+                                </select>
+                                <div class="input_tips">是否允许用户添加 NS 记录。NS 记录用于指定域名的权威域名服务器，开启后用户可以将子域名委托给其他 DNS 服务器管理。</div>
+                            </div>
+                        </div>
                     </form>
                 </div>
                 <div class="card-footer">
@@ -294,6 +316,109 @@
                 </div>
                 <div class="card-footer">
                     <a class="btn btn-info text-white float-right" @click="form('friendlinks')">保存</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 mt-2">
+            <div class="card">
+                <div class="card-header">
+                    首页文本配置
+                </div>
+                <div class="card-body">
+                    <form id="form-homepage">
+                        <input type="hidden" name="action" value="config">
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">Hero 标题</label>
+                            <div class="col-sm-9">
+                                <input type="text" name="homepage[hero_title]" class="form-control" placeholder="输入首页大标题"
+                                       value="{{ config('sys.homepage.hero_title', 'Free Domain Registration') }}">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">Hero 描述</label>
+                            <div class="col-sm-9">
+                                <textarea class="form-control" name="homepage[hero_description]" placeholder="输入首页描述文字" rows="2"
+                                >{{ config('sys.homepage.hero_description', 'Get your own domain from OSFC. Our mission is promoting Open Source & Free Code for everyone.') }}</textarea>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">搜索框占位符</label>
+                            <div class="col-sm-9">
+                                <input type="text" name="homepage[search_placeholder]" class="form-control" placeholder="输入搜索框占位符"
+                                       value="{{ config('sys.homepage.search_placeholder', 'Enter your desired subdomain prefix') }}">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">特点标题</label>
+                            <div class="col-sm-9">
+                                <input type="text" name="homepage[features_title]" class="form-control" placeholder="输入特点部分标题"
+                                       value="{{ config('sys.homepage.features_title', 'Why Choose OSFC Registry?') }}">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">特点内容</label>
+                            <div class="col-sm-9">
+                                <textarea class="form-control" name="homepage[features_content]" placeholder="输入特点内容，格式：标题|图标|描述，一行一个特点" rows="6"
+                                >{{ config('sys.homepage.features_content', "Completely Free|fas fa-gift|Our domain registration service is 100% free, with no hidden fees or charges. Get your domain without spending a penny.\nOpen Source|fas fa-code|The entire platform is open source. You can contribute, inspect, or fork our code on GitHub.\nSecure & Reliable|fas fa-shield-alt|We provide robust DNS management with high availability and security features to protect your domain.") }}</textarea>
+                                <div class="input_tips">
+                                    格式：标题|图标|描述<br>
+                                    每行一个特点，图标使用Font Awesome类名
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">关于标题</label>
+                            <div class="col-sm-9">
+                                <input type="text" name="homepage[about_title]" class="form-control" placeholder="输入关于部分标题"
+                                       value="{{ config('sys.homepage.about_title', 'About OSFC') }}">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">关于内容</label>
+                            <div class="col-sm-9">
+                                <textarea class="form-control" name="homepage[about_content]" placeholder="输入关于部分内容，每段一行" rows="8"
+                                >{{ config('sys.homepage.about_content', "OSFC is a community-driven initiative dedicated to supporting open source projects and providing free services to developers worldwide. The name represents our core values: Open Source & Free Code.\nOur mission is to make technology more accessible by removing financial barriers. We believe that everyone should have access to the tools they need to create, learn, and share their work online.\nOSFC is open to all people, regardless of background, experience level, or location. We welcome contributions from anyone who shares our vision of a more open and accessible internet.\nHowever, we firmly oppose anyone using OSFC resources for any illegal activities. We operate in accordance with the relevant laws and regulations of the People's Republic of China.") }}</textarea>
+                                <div class="input_tips">
+                                    每行一段文字，将自动分段显示
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">使用步骤标题</label>
+                            <div class="col-sm-9">
+                                <input type="text" name="homepage[steps_title]" class="form-control" placeholder="输入使用步骤部分标题"
+                                       value="{{ config('sys.homepage.steps_title', 'How It Works') }}">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">使用步骤内容</label>
+                            <div class="col-sm-9">
+                                <textarea class="form-control" name="homepage[steps_content]" placeholder="输入使用步骤内容，格式：标题|描述，一行一个步骤" rows="6"
+                                >{{ config('sys.homepage.steps_content', "Choose Your Domain|Enter your preferred subdomain name and select an available extension from our list.\nCreate an Account|Sign up for a free account to manage your domains and DNS records.\nSet Up DNS Records|Add A records to point your domain to an IP address, or CNAME records to link to another domain.\nGo Live|Your domain is ready to use! DNS changes typically propagate within minutes.") }}</textarea>
+                                <div class="input_tips">
+                                    格式：标题|描述<br>
+                                    每行一个步骤
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">按钮文本</label>
+                            <div class="col-sm-9">
+                                <input type="text" name="homepage[cta_button]" class="form-control" placeholder="输入按钮文本"
+                                       value="{{ config('sys.homepage.cta_button', 'Get Started Now') }}">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">页脚文本</label>
+                            <div class="col-sm-9">
+                                <input type="text" name="homepage[footer_text]" class="form-control" placeholder="输入页脚文本"
+                                       value="{{ config('sys.homepage.footer_text', 'OSFC.org.cn - Open Source & Free Code. All rights reserved.') }}">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer">
+                    <a class="btn btn-info text-white float-right" @click="form('homepage')">保存</a>
                 </div>
             </div>
         </div>

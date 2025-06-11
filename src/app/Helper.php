@@ -371,13 +371,21 @@ class Helper
      */
     public static function checkIPValidity($type, $value)
     {
+        // 检查是否启用 Fuckabuser
+        $fuckabuser_enabled = config('sys.domain.fuckabuser_enabled', 1);
+        
         // 如果不是A或AAAA记录，直接返回true
         if ($type != 'A' && $type != 'AAAA') {
-            // 对于MX和SRV记录，可以额外检查域名格式
-            if ($type == 'MX' || $type == 'SRV') {
+            // 对于MX、NS和SRV记录，可以额外检查域名格式
+            if ($type == 'MX' || $type == 'SRV' || $type == 'NS') {
                 // 如果是SRV记录，特殊检查其格式
                 if ($type == 'SRV') {
                     return self::validateSRVRecord($value);
+                }
+                
+                // 如果是NS记录，检查是否启用
+                if ($type == 'NS' && config('sys.domain.ns_enabled', 0) != 1) {
+                    return "NS records are not allowed. Please contact the administrator.";
                 }
                 
                 // 简单验证域名格式
@@ -390,6 +398,11 @@ class Helper
             }
             
             // 其他类型直接通过
+            return true;
+        }
+        
+        // 如果禁用了 Fuckabuser，直接返回 true
+        if ($fuckabuser_enabled == 0) {
             return true;
         }
         

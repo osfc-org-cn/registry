@@ -134,11 +134,11 @@
 
     <section class="hero">
     <div class="container">
-            <h1>Free Domain Registration</h1>
-            <p>Get your own domain from OSFC. Our mission is promoting Open Source & Free Code for everyone.</p>
+            <h1>{{ config('sys.homepage.hero_title', 'Free Domain Registration') }}</h1>
+            <p>{{ config('sys.homepage.hero_description', 'Get your own domain from OSFC. Our mission is promoting Open Source & Free Code for everyone.') }}</p>
             
             <div class="search-box">
-                <input type="text" class="search-input" id="domain-prefix" placeholder="Enter your desired subdomain prefix">
+                <input type="text" class="search-input" id="domain-prefix" placeholder="{{ config('sys.homepage.search_placeholder', 'Enter your desired subdomain prefix') }}">
                 <select id="domain-select" class="domain-select">
                     @foreach(\App\Helper::getAllDomains() as $domain)
                                 <option value="{{ $domain->did }}">.{{ $domain->domain }}</option>
@@ -153,86 +153,76 @@
 
     <section class="features">
         <div class="container">
-            <h2 class="section-title">Why Choose OSFC Registry?</h2>
+            <h2 class="section-title">{{ config('sys.homepage.features_title', 'Why Choose OSFC Registry?') }}</h2>
             
             <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-gift"></i></div>
-                    <h3 class="feature-title">Completely Free</h3>
-                    <p>Our domain registration service is 100% free, with no hidden fees or charges. Get your domain without spending a penny.</p>
-                </div>
+                @php
+                    $featuresContent = config('sys.homepage.features_content', "Completely Free|fas fa-gift|Our domain registration service is 100% free, with no hidden fees or charges. Get your domain without spending a penny.\nOpen Source|fas fa-code|The entire platform is open source. You can contribute, inspect, or fork our code on GitHub.\nSecure & Reliable|fas fa-shield-alt|We provide robust DNS management with high availability and security features to protect your domain.");
+                    $features = explode("\n", $featuresContent);
+                @endphp
                 
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-code"></i></div>
-                    <h3 class="feature-title">Open Source</h3>
-                    <p>The entire platform is open source. You can contribute, inspect, or fork our code on GitHub.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
-                    <h3 class="feature-title">Secure & Reliable</h3>
-                    <p>We provide robust DNS management with high availability and security features to protect your domain.</p>
-                </div>
+                @foreach($features as $feature)
+                    @php
+                        $featureParts = explode('|', $feature);
+                        $featureTitle = $featureParts[0] ?? '';
+                        $featureIcon = $featureParts[1] ?? 'fas fa-star';
+                        $featureDesc = $featureParts[2] ?? '';
+                    @endphp
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="{{ $featureIcon }}"></i></div>
+                        <h3 class="feature-title">{{ $featureTitle }}</h3>
+                        <p>{{ $featureDesc }}</p>
+                    </div>
+                @endforeach
             </div>
         </div>
     </section>
 
     <section class="about">
         <div class="container">
-            <h2 class="section-title">About OSFC</h2>
+            <h2 class="section-title">{{ config('sys.homepage.about_title', 'About OSFC') }}</h2>
             
             <div class="about-content">
-                <p>OSFC is a community-driven initiative dedicated to supporting open source projects and providing free services to developers worldwide. The name represents our core values: Open Source & Free Code.</p>
+                @php
+                    $aboutContent = config('sys.homepage.about_content', "OSFC is a community-driven initiative dedicated to supporting open source projects and providing free services to developers worldwide. The name represents our core values: Open Source & Free Code.\nOur mission is to make technology more accessible by removing financial barriers. We believe that everyone should have access to the tools they need to create, learn, and share their work online.\nOSFC is open to all people, regardless of background, experience level, or location. We welcome contributions from anyone who shares our vision of a more open and accessible internet.\nHowever, we firmly oppose anyone using OSFC resources for any illegal activities. We operate in accordance with the relevant laws and regulations of the People's Republic of China.");
+                    $paragraphs = explode("\n", $aboutContent);
+                @endphp
                 
-                <p>Our mission is to make technology more accessible by removing financial barriers. We believe that everyone should have access to the tools they need to create, learn, and share their work online.</p>
-                
-                <p>OSFC is open to all people, regardless of background, experience level, or location. We welcome contributions from anyone who shares our vision of a more open and accessible internet.</p>
-                
-                <p>However, we firmly oppose anyone using OSFC resources for any illegal activities. We operate in accordance with the relevant laws and regulations of the People's Republic of China.</p>
+                @foreach($paragraphs as $paragraph)
+                    <p>{{ $paragraph }}</p>
+                @endforeach
             </div>
         </div>
     </section>
 
     <section class="how-it-works">
         <div class="container">
-            <h2 class="section-title">How It Works</h2>
+            <h2 class="section-title">{{ config('sys.homepage.steps_title', 'How It Works') }}</h2>
             
             <div class="steps-container">
-                <div class="step-card">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <h3>Choose Your Domain</h3>
-                        <p>Enter your preferred subdomain name and select an available extension from our list.</p>
-                    </div>
-                </div>
+                @php
+                    $stepsContent = config('sys.homepage.steps_content', "Choose Your Domain|Enter your preferred subdomain name and select an available extension from our list.\nCreate an Account|Sign up for a free account to manage your domains and DNS records.\nSet Up DNS Records|Add A records to point your domain to an IP address, or CNAME records to link to another domain.\nGo Live|Your domain is ready to use! DNS changes typically propagate within minutes.");
+                    $steps = explode("\n", $stepsContent);
+                @endphp
                 
-                <div class="step-card">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <h3>Create an Account</h3>
-                        <p>Sign up for a free account to manage your domains and DNS records.</p>
-                    </div>
-                </div>
-                
-                <div class="step-card">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <h3>Set Up DNS Records</h3>
-                        <p>Add A records to point your domain to an IP address, or CNAME records to link to another domain.</p>
-                    </div>
+                @foreach($steps as $index => $step)
+                    @php
+                        $stepParts = explode('|', $step);
+                        $stepTitle = $stepParts[0] ?? '';
+                        $stepDesc = $stepParts[1] ?? '';
+                    @endphp
+                    <div class="step-card">
+                        <div class="step-number">{{ $index + 1 }}</div>
+                        <div class="step-content">
+                            <h3>{{ $stepTitle }}</h3>
+                            <p>{{ $stepDesc }}</p>
                         </div>
-                
-                <div class="step-card">
-                    <div class="step-number">4</div>
-                    <div class="step-content">
-                        <h3>Go Live</h3>
-                        <p>Your domain is ready to use! DNS changes typically propagate within minutes.</p>
                     </div>
-                </div>
+                @endforeach
             </div>
             
             <div class="cta-container">
-                <a href="/register" class="cta-button">Get Started Now</a>
+                <a href="/register" class="cta-button">{{ config('sys.homepage.cta_button', 'Get Started Now') }}</a>
             </div>
         </div>
     </section>
@@ -263,7 +253,7 @@
 
     <footer class="footer">
         <div class="container">
-            <p>&copy; {{ date('Y') }} OSFC.org.cn - Open Source & Free Code. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} {{ config('sys.homepage.footer_text', 'OSFC.org.cn - Open Source & Free Code. All rights reserved.') }}</p>
             <div class="footer-links">
                 <a href="https://github.com/osfc-org-cn" class="footer-link" target="_blank"><i class="fab fa-github"></i> GitHub</a>
         </div>
