@@ -290,33 +290,6 @@
                         </tbody>
                     </table>
                 </div>
-                
-                <!-- 分页组件 -->
-                <div class="mdui-m-t-2 mdui-text-center" v-if="data.last_page > 1">
-                    <ul class="mdui-pagination">
-                        <li class="mdui-pagination-item" :class="{'mdui-pagination-item-active': search.page === 1}">
-                            <a href="javascript:;" class="mdui-ripple" @click="getList(1)">1</a>
-                        </li>
-                        <template v-if="data.current_page > 4">
-                            <li class="mdui-pagination-item mdui-pagination-item-icon">
-                                <a href="javascript:;" class="mdui-ripple">...</a>
-                            </li>
-                        </template>
-                        <template v-for="i in getPages()">
-                            <li class="mdui-pagination-item" :class="{'mdui-pagination-item-active': search.page === i}">
-                                <a href="javascript:;" class="mdui-ripple" @click="getList(i)">@{{ i }}</a>
-                            </li>
-                        </template>
-                        <template v-if="data.current_page < data.last_page - 3">
-                            <li class="mdui-pagination-item mdui-pagination-item-icon">
-                                <a href="javascript:;" class="mdui-ripple">...</a>
-                            </li>
-                            <li class="mdui-pagination-item" :class="{'mdui-pagination-item-active': search.page === data.last_page}">
-                                <a href="javascript:;" class="mdui-ripple" @click="getList(data.last_page)">@{{ data.last_page }}</a>
-                            </li>
-                        </template>
-                    </ul>
-                </div>
             </div>
         </div>
         
@@ -441,20 +414,6 @@
                 nsEnabledDomains: @json(config('sys.domain.ns_enabled_domains', '')),
             },
             methods: {
-                getPages: function() {
-                    if (!this.data.last_page) return [];
-                    
-                    let current = this.data.current_page;
-                    let last = this.data.last_page;
-                    let delta = 2;
-                    let range = [];
-                    
-                    for (let i = Math.max(2, current - delta); i <= Math.min(last - 1, current + delta); i++) {
-                        range.push(i);
-                    }
-                    
-                    return range;
-                },
                 getDomainPoint: function () {
                     var vm = this;
                     for (var i = 0; i < this.domainList.length; i++) {
@@ -517,7 +476,8 @@
                 },
                 getList: function (page) {
                     var vm = this;
-                    vm.search.page = typeof page === 'undefined' ? vm.search.page : page;
+                    // 设置limit参数为一个很大的数字，确保获取所有记录
+                    vm.search.limit = 1000;
                     this.$post("/home", vm.search, {action: 'recordList'})
                         .then(function (data) {
                             if (data.status === 0) {

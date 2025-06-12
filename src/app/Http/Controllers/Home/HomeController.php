@@ -394,11 +394,32 @@ class HomeController extends Controller
 
     private function recordList(Request $request)
     {
-        $data = DomainRecord::search()
+        // 检查是否请求了所有记录
+        $limit = intval($request->post('limit', 0));
+        
+        $query = DomainRecord::search()
             ->where('uid', auth()->id())
-            ->orderBy('id', 'desc')
-            ->pageSelect();
-        return ['status' => 0, 'message' => '', 'data' => $data];
+            ->orderBy('id', 'desc');
+            
+        if ($limit > 0) {
+            // 如果指定了limit参数，则获取指定数量的记录
+            $data = $query->limit($limit)->get();
+            
+            // 构造与分页格式相同的数据结构，以保持前端兼容性
+            $result = [
+                'current_page' => 1,
+                'data' => $data,
+                'last_page' => 1,
+                'per_page' => $limit,
+                'total' => count($data)
+            ];
+            
+            return ['status' => 0, 'message' => '', 'data' => $result];
+        } else {
+            // 否则使用默认分页
+            $data = $query->pageSelect();
+            return ['status' => 0, 'message' => '', 'data' => $data];
+        }
     }
 
     private function domainList(Request $request)
