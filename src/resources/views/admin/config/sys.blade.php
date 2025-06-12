@@ -262,9 +262,18 @@
                             <div class="col-sm-9">
                                 <select name="domain[ns_enabled]" :value="{{ config('sys.domain.ns_enabled', 0) }}" class="form-control">
                                     <option value="0">关闭</option>
-                                    <option value="1">开启</option>
+                                    <option value="1">全局开启</option>
                                 </select>
                                 <div class="input_tips">是否允许用户添加 NS 记录。NS 记录用于指定域名的权威域名服务器，开启后用户可以将子域名委托给其他 DNS 服务器管理。</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">单独域名允许NS记录</label>
+                            <div class="col-sm-9">
+                                <input type="text" name="domain[ns_enabled_domains]" class="form-control" placeholder="输入允许添加NS记录的域名ID，用逗号分隔"
+                                       value="{{ config('sys.domain.ns_enabled_domains', '') }}">
+                                <div class="input_tips">当全局NS记录设置为"关闭"时，可以指定特定域名允许添加NS记录。请输入域名的did（域名ID），多个ID用英文逗号分隔。例如：1,2,3</div>
                             </div>
                         </div>
                     </form>

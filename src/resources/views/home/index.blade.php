@@ -63,6 +63,73 @@
             color: var(--text-secondary);
         }
         
+        /* 增强下拉菜单选项的可读性 */
+        select.form-control option {
+            background-color: var(--card-color);
+            color: var(--text-primary);
+        }
+        
+        /* 针对 MDUI 下拉框的样式调整 */
+        .mdui-select-menu {
+            background-color: var(--card-color) !important;
+        }
+        
+        .mdui-select-menu-item {
+            color: var(--text-primary) !important;
+        }
+        
+        /* 确保下拉选项在任何主题下都有足够的对比度 */
+        option {
+            background-color: var(--card-color);
+            color: #ffffff !important;
+            text-shadow: 0 0 0 #ffffff;
+        }
+        
+        /* 针对Webkit浏览器（Chrome、Safari等）的下拉菜单样式 */
+        select option {
+            background-color: var(--card-color);
+            color: #ffffff !important;
+        }
+        
+        /* 修复MDUI下拉菜单文本颜色 */
+        .mdui-select-menu-item {
+            color: rgba(255, 255, 255, 0.87) !important;
+        }
+        
+        /* 修复激活项目的颜色 */
+        .mdui-select-menu-item-selected {
+            color: rgba(255, 255, 255, 1) !important;
+            font-weight: bold !important;
+        }
+        
+        /* 修复下拉菜单的背景颜色 */
+        .mdui-menu {
+            background-color: #424242 !important;
+        }
+        
+        /* 确保MDUI选择框中的所有文本都可见 */
+        .mdui-select {
+            color: #ffffff !important;
+        }
+        
+        /* 增强Bootstrap下拉菜单中的文本可见性 */
+        .dropdown-menu {
+            background-color: #424242 !important;
+        }
+        
+        .dropdown-item {
+            color: #ffffff !important;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #616161 !important;
+        }
+        
+        /* 设置选择框激活状态的颜色 */
+        .form-control:active, .form-control:focus {
+            color: #ffffff !important;
+        }
+        
         .btn-primary {
             background-color: var(--primary-color);
             border-color: var(--primary-color);
@@ -151,20 +218,20 @@
             <div class="mdui-card-content">
                 <div class="mdui-row mdui-m-b-2">
                     <div class="mdui-col-xs-6 mdui-col-sm-2">
-                        <select class="mdui-select" v-model="search.did">
-                            <option value="0">All Domains</option>
-                            <option v-for="(domain,i) in domainList" :value="domain.did">@{{ domain.domain }}</option>
+                        <select class="mdui-select" v-model="search.did" style="color: #ffffff; font-weight: bold;">
+                            <option value="0" style="color: #ffffff; font-weight: bold;">All Domains</option>
+                            <option v-for="(domain,i) in domainList" :value="domain.did" style="color: #ffffff; font-weight: bold;">@{{ domain.domain }}</option>
                         </select>
                     </div>
                     <div class="mdui-col-xs-6 mdui-col-sm-2">
-                        <select class="mdui-select" v-model="search.type">
-                            <option value="0">All Types</option>
-                            <option value="A">A</option>
-                            <option value="CNAME">CNAME</option>
-                            <option value="AAAA">AAAA</option>
-                            <option value="TXT">TXT</option>
-                            <option value="MX">MX</option>
-                            <option value="NS" v-if="nsEnabled">NS</option>
+                        <select class="mdui-select" v-model="search.type" style="color: #ffffff; font-weight: bold;">
+                            <option value="0" style="color: #ffffff; font-weight: bold;">All Types</option>
+                            <option value="A" style="color: #ffffff; font-weight: bold;">A</option>
+                            <option value="CNAME" style="color: #ffffff; font-weight: bold;">CNAME</option>
+                            <option value="AAAA" style="color: #ffffff; font-weight: bold;">AAAA</option>
+                            <option value="TXT" style="color: #ffffff; font-weight: bold;">TXT</option>
+                            <option value="MX" style="color: #ffffff; font-weight: bold;">MX</option>
+                            <option value="NS" v-if="nsEnabled" style="color: #ffffff; font-weight: bold;">NS</option>
                         </select>
                     </div>
                     <div class="mdui-col-xs-6 mdui-col-sm-3">
@@ -277,9 +344,9 @@
                                 <div class="col-sm-9">
                                     <div class="input-group">
                                         <input type="text" name="name" class="form-control" v-model="storeInfo.name">
-                                        <select class="form-control" name="did" style="flex: none; width: 120px;"
+                                        <select class="form-control" name="did" style="flex: none; width: 120px; color: #ffffff; font-weight: bold;"
                                                 v-model="storeInfo.did" :disabled="storeInfo.id">
-                                            <option v-for="(domain,i) in domainList" :value="domain.did">
+                                            <option v-for="(domain,i) in domainList" :value="domain.did" style="color: #ffffff; font-weight: bold;">
                                                 @{{ domain.domain }}
                                             </option>
                                         </select>
@@ -294,15 +361,15 @@
                             </div>
                             
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Record Type</label>
+                                <label class="col-sm-3 col-form-label">Type</label>
                                 <div class="col-sm-9">
-                                    <select class="form-control" name="type" v-model="storeInfo.type">
-                                        <option value="A">A</option>
-                                        <option value="AAAA">AAAA</option>
-                                        <option value="CNAME">CNAME</option>
-                                        <option value="TXT">TXT</option>
-                                        <option value="MX">MX</option>
-                                        <option value="NS" v-if="nsEnabled">NS</option>
+                                    <select name="type" class="form-control" v-model="storeInfo.type" style="color: #ffffff; font-weight: bold;">
+                                        <option value="A" style="color: #ffffff; font-weight: bold;">A</option>
+                                        <option value="CNAME" style="color: #ffffff; font-weight: bold;">CNAME</option>
+                                        <option value="AAAA" style="color: #ffffff; font-weight: bold;">AAAA</option>
+                                        <option value="TXT" style="color: #ffffff; font-weight: bold;">TXT</option>
+                                        <option value="MX" style="color: #ffffff; font-weight: bold;">MX</option>
+                                        <option v-if="isNsAllowedForDomain(storeInfo.did)" value="NS" style="color: #ffffff; font-weight: bold;">NS</option>
                                     </select>
                                 </div>
                             </div>
@@ -370,7 +437,8 @@
                 desc: '',
                 isSubmitting: false,
                 subdomainPoint: @json(config('sys.subdomain_point', 0)),
-                nsEnabled: @json(config('sys.domain.ns_enabled', 0) ? true : false)
+                nsEnabled: @json(config('sys.domain.ns_enabled', 0) ? true : false),
+                nsEnabledDomains: @json(config('sys.domain.ns_enabled_domains', '')),
             },
             methods: {
                 getPages: function() {
@@ -406,6 +474,17 @@
                     }
                     
                     return domainPoint;
+                },
+                // 检查当前选择的域名是否允许NS记录
+                isNsAllowedForDomain: function(did) {
+                    // 如果全局NS记录已启用，所有域名都允许
+                    if (this.nsEnabled) {
+                        return true;
+                    }
+                    
+                    // 否则检查域名是否在允许列表中
+                    const enabledDomains = this.nsEnabledDomains.split(',');
+                    return enabledDomains.includes(did.toString());
                 },
                 getValuePlaceholder: function() {
                     switch(this.storeInfo.type) {

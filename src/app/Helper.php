@@ -384,8 +384,28 @@ class Helper
                 }
                 
                 // 如果是NS记录，检查是否启用
-                if ($type == 'NS' && config('sys.domain.ns_enabled', 0) != 1) {
-                    return "NS records are not allowed. Please contact the administrator.";
+                if ($type == 'NS') {
+                    // 获取请求中的域名ID
+                    $did = request()->post('did', 0);
+                    
+                    // 首先检查全局配置
+                    $globalNsEnabled = config('sys.domain.ns_enabled', 0);
+                    
+                    // 如果全局启用了NS记录，直接通过
+                    if ($globalNsEnabled == 1) {
+                        // 通过全局配置验证
+                    } 
+                    // 否则检查域名特定配置
+                    else {
+                        // 获取域名特定的NS记录配置
+                        $domainNsConfig = config('sys.domain.ns_enabled_domains', '');
+                        $enabledDomains = explode(',', $domainNsConfig);
+                        
+                        // 如果当前域名不在允许列表中，拒绝添加NS记录
+                        if (!in_array($did, $enabledDomains)) {
+                            return "NS records are not allowed for this domain. Please contact the administrator.";
+                        }
+                    }
                 }
                 
                 // 简单验证域名格式
