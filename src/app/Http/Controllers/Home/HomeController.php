@@ -11,6 +11,7 @@ namespace App\Http\Controllers\Home;
 
 use App\Helper;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\GithubAuthController;
 use App\Models\Domain;
 use App\Models\DomainRecord;
 use App\Models\User;
@@ -200,6 +201,14 @@ class HomeController extends Controller
         } elseif (!$_dns = \App\Klsf\Dns\Helper::getModel($dns->dns)) {
             $result['message'] = 'Domain configuration error [Unsupported]';
         } else {
+            // 检查是否为NS或MX记录，如果是，检查GitHub认证
+            if (in_array($data['type'], ['NS', 'MX']) && config('github_auth_enabled', '0') === '1') {
+                if (!GithubAuthController::canAddSpecialRecords(Auth::id())) {
+                    $result['message'] = 'GitHub verification required. To add NS or MX records, you need to connect a GitHub account that is at least ' . config('github_auth_required_days', 180) . ' days old.';
+                    return $result;
+                }
+            }
+            
             // 检测 IP 是否合规
             $checkIpResult = Helper::checkIPValidity($data['type'], $data['value']);
             if ($checkIpResult !== true) {

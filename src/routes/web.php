@@ -97,6 +97,9 @@ Route::prefix('admin')->middleware('auth:admin', 'auth.session:admin')->namespac
         Route::get('check', function () {
             return view('admin.config.check');
         });
+        Route::get('github', function () {
+            return view('admin.config.github');
+        });
         Route::post('/', 'ConfigController@post');
     });
 
@@ -112,3 +115,8 @@ Route::prefix('admin')->middleware('auth:admin', 'auth.session:admin')->namespac
         });
     });
 });
+
+// GitHub认证路由
+Route::get('/github/redirect', 'GithubAuthController@redirect')->name('github.redirect');
+Route::get('/github/callback', 'GithubAuthController@callback')->name('github.callback');
+Route::post('/github/unbind', 'GithubAuthController@unbind')->name('github.unbind');

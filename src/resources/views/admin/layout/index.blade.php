@@ -71,6 +71,11 @@
                         </a>
                     </li>
                     <li>
+                        <a href="/admin/config/github">
+                            <i class="fa fa-caret-right"></i> GitHub认证配置
+                        </a>
+                    </li>
+                    <li>
                         <a href="/admin/email-test">
                             <i class="fa fa-caret-right"></i> 邮件模板测试
                         </a>
