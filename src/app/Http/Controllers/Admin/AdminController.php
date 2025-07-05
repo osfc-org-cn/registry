@@ -118,4 +118,42 @@ class AdminController extends Controller
     {
         return view('admin.email-test');
     }
+    
+    /**
+     * API: 获取所有域名信息
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAllDomains()
+    {
+        $domains = \App\Models\Domain::with(['records' => function($query) {
+            $query->select('id', 'did', 'uid', 'name', 'type', 'value', 'line', 'created_at', 'updated_at');
+        }])->get([
+            'did', 'domain', 'domain_id', 'dns', 'groups', 'point', 'desc', 'created_at', 'updated_at'
+        ]);
+        
+        return response()->json([
+            'status' => 0,
+            'message' => 'success',
+            'data' => $domains
+        ]);
+    }
+    
+    /**
+     * API: 获取所有用户信息
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAllUsers()
+    {
+        $users = \App\Models\User::with(['group'])->where('gid', '!=', 99)->get([
+            'uid', 'username', 'email', 'gid', 'point', 'status', 'created_at', 'updated_at'
+        ]);
+        
+        return response()->json([
+            'status' => 0,
+            'message' => 'success',
+            'data' => $users
+        ]);
+    }
 }

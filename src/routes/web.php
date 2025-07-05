@@ -67,6 +67,17 @@ Route::prefix('admin')->middleware('auth:admin', 'auth.session:admin')->namespac
 
     Route::get('testview-email', 'AdminController@testEmailView');
     Route::get('email-test', 'AdminController@testEmailIndex');
+    
+    // API路由
+    Route::prefix('api')->group(function () {
+        Route::get('get-all-domains', 'AdminController@getAllDomains');
+        Route::get('get-all-users', 'AdminController@getAllUsers');
+    });
+
+    // API文档页面
+    Route::get('api-docs', function () {
+        return view('admin.api-docs');
+    });
 
     Route::prefix('user')->group(function () {
         Route::post('/', 'UserController@post');
