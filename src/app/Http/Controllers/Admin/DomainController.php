@@ -9,10 +9,12 @@
 namespace App\Http\Controllers\Admin;
 
 
-use App\Klsf\Dns\Helper;
+use App\Helper;
+use App\Klsf\Dns\Helper as DnsHelper;
 use App\Models\DnsConfig;
 use App\Models\Domain;
 use App\Models\DomainRecord;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class DomainController extends Controller
@@ -44,7 +46,7 @@ class DomainController extends Controller
             $result['message'] = '请选择域名解析平台';
         } elseif (!$config = DnsConfig::find($dns)) {
             $result['message'] = '请先对此解析平台进行配置';
-        } elseif (!$_dns = Helper::getModel($dns)) {
+        } elseif (!$_dns = DnsHelper::getModel($dns)) {
             $result['message'] = '暂不支持此域名解析平台';
         } else {
             $_dns->config($config->config);
@@ -111,7 +113,7 @@ class DomainController extends Controller
             $result['message'] = '请选择要添加的域名';
         } elseif (!$config = DnsConfig::find($dns)) {
             $result['message'] = '请先对此解析平台进行配置';
-        } elseif (!$_dns = Helper::getModel($dns)) {
+        } elseif (!$_dns = DnsHelper::getModel($dns)) {
             $result['message'] = '暂不支持此域名解析平台';
         } elseif (empty($groups)) {
             $result['message'] = '请选择用户组';
@@ -156,6 +158,68 @@ class DomainController extends Controller
         if (!$id || !$row = Domain::find($id)) {
             $result['message'] = '域名不存在';
         } elseif ($row->delete()) {
+            // 获取与域名关联的所有记录
+            $records = DomainRecord::where('did', $id)->get();
+            
+            // 记录用户ID集合，用于后续发送邮件
+            $userIds = [];
+            
+            // 为每个用户收集记录详情
+            $userRecords = [];
+            
+            // 删除所有关联记录
+            foreach ($records as $record) {
+                // 如果记录有关联用户，添加到集合中
+                if ($record->uid) {
+                    $userId = $record->uid;
+                    
+                    // 初始化用户记录数组（如果不存在）
+                    if (!isset($userRecords[$userId])) {
+                        $userRecords[$userId] = [];
+                    }
+                    
+                    // 添加记录详情
+                    $userRecords[$userId][] = [
+                        'name' => $record->name,
+                        'type' => $record->type,
+                        'value' => $record->value,
+                        'created_at' => $record->created_at->format('Y-m-d H:i:s')
+                    ];
+                    
+                    $userIds[$userId] = [
+                        'name' => $record->name,
+                        'domain' => $row->domain
+                    ];
+                }
+                
+                // 删除记录
+                Helper::deleteRecord($record);
+                $record->delete();
+            }
+            
+            // 向所有受影响的用户发送邮件通知
+            foreach ($userIds as $userId => $domainInfo) {
+                $user = User::find($userId);
+                if ($user && $user->email) {
+                    $domainName = $domainInfo['name'] . '.' . $domainInfo['domain'];
+                    
+                    // 发送域名删除通知邮件
+                    Helper::sendEmail(
+                        $user->email,
+                        'Domain Deletion Notice',
+                        'email.domain-deleted',
+                        [
+                            'username' => $user->username,
+                            'domainName' => $domainName,
+                            'webName' => config('sys.web.name', 'OSFC Registry'),
+                            'reason' => $request->post('reason'), // 可选的删除原因
+                            'records' => $userRecords[$userId] // 添加用户的所有记录详情
+                        ]
+                    );
+                }
+            }
+            
+            // 删除所有域名记录
             DomainRecord::where('did', $id)->delete();
             $result = ['status' => 0, 'message' => '删除成功'];
         } else {

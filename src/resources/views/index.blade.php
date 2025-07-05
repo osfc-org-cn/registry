@@ -78,6 +78,203 @@
                 width: 100%;
             }
         }
+        
+        /* 登录弹框样式 */
+        #login-modal {
+            display: none;
+        }
+        
+        .login-modal-content {
+            padding: 25px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border-radius: 12px;
+            max-width: 100%;
+            overflow: hidden;
+        }
+        
+        .login-modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--text-color);
+        }
+        
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            font-size: 0.95rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--input-bg);
+            transition: all 0.25s ease-in-out;
+            color: var(--text-color);
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px var(--focus-ring);
+            outline: none;
+        }
+        
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+        
+        .remember-me {
+            display: flex;
+            align-items: center;
+        }
+        
+        .remember-me input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        
+        .forgot-link {
+            font-size: 0.9rem;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .btn {
+            display: inline-block;
+            font-weight: 500;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            user-select: none;
+            border: 1px solid transparent;
+            padding: 0.625rem 1.25rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            border-radius: 8px;
+            transition: all 0.25s ease-in-out;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            color: white;
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+        
+        .third-party-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .third-party-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            background-color: var(--bg-color-offset);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+        
+        .third-party-button:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .third-party-hint {
+            text-align: center;
+            margin-top: 0.75rem;
+            font-size: 0.75rem;
+            color: var(--text-color-light);
+        }
+        
+        .login-footer {
+            margin-top: 1.75rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-color-light);
+        }
+        
+        .login-footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .loading-text {
+            opacity: 0.8;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 为弹窗添加自定义样式 */
+        .login-modal-layer {
+            background-color: var(--bg-color) !important;
+            border-radius: 12px !important;
+            overflow: hidden !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+        }
+        
+        .login-modal-layer .layui-layer-content {
+            padding: 0 !important;
+            overflow: hidden !important;
+        }
+        
+        .login-modal-layer .layui-layer-close {
+            color: var(--text-color) !important;
+            font-size: 16px !important;
+            right: 12px !important;
+            top: 12px !important;
+        }
+        
+        .btn-primary {
+            color: white;
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-color-light);
+            transform: translateY(-1px);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -116,7 +313,7 @@
             </li>
     @else
             <li class="nav-item">
-                        <a class="nav-link" href="/login">Login</a>
+                        <a class="nav-link" href="javascript:void(0);" onclick="handleLogin()">Login</a>
             </li>
             <li class="nav-item">
                         <a class="nav-link" href="/register">Register</a>
@@ -260,9 +457,39 @@
     </div>
     </footer>
 
+    <!-- 登录弹框 -->
+    <div id="login-modal" style="display: none;">
+        <div class="login-modal-content">
+            <h3 class="login-modal-title">Login to Your Account</h3>
+            
+            <form id="modal-form-login">
+                <div class="form-group">
+                    <label class="form-label" for="modal-username">Username</label>
+                    <input type="text" id="modal-username" name="username" class="form-control" placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="modal-password">Password</label>
+                    <input type="password" id="modal-password" name="password" class="form-control" placeholder="Enter your password">
+                </div>
+                <div class="remember-forgot">
+                    <div class="remember-me">
+                        <input type="checkbox" name="remember" id="modal-remember">
+                        <label for="modal-remember">Remember me</label>
+                    </div>
+                    <a href="/forgot-password" class="forgot-link">Forgot password?</a>
+                </div>
+                <button type="button" class="btn btn-primary btn-block" onclick="modalLoginAction(this)">Sign in</button>
+            </form>
+            
+            <div class="login-footer">
+                <p>Don't have an account? <a href="/register">Sign up</a></p>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/layer/3.5.1/layer.js"></script>
-<script src="/js/main.js"></script>
+    <script src="/js/main.js"></script>
     <script src="/js/theme.js"></script>
 <script>
         // 初始化layer配置，确保文本可见并使用英文按钮
@@ -276,6 +503,79 @@
                 layer.close(index);
             }
         });
+        
+        // 处理登录按钮点击事件
+        function handleLogin() {
+            // 检查后台配置，决定是弹出登录框还是跳转到登录页面
+            // 这里使用配置值，如果配置为1则使用弹框登录，否则跳转到登录页面
+            const useModalLogin = "{{ config('sys.login_modal_enabled', '0') }}" === "1";
+            
+            if (useModalLogin) {
+                showLoginModal();
+            } else {
+                window.location.href = "/login";
+            }
+        }
+        
+        // 显示登录弹框
+        function showLoginModal() {
+            layer.open({
+                type: 1,
+                title: false,
+                closeBtn: 1,
+                shade: 0.8,
+                id: 'LAY_loginView',
+                area: ['350px', 'auto'],
+                skin: 'login-modal-layer',
+                content: $('#login-modal').html(),
+                success: function(layero, index) {
+                    // 绑定回车键登录
+                    layero.find('#modal-password').on('keyup', function(e) {
+                        if (e.key === 'Enter') {
+                            modalLoginAction(layero.find('.btn-primary')[0]);
+                        }
+                    });
+                }
+            });
+        }
+        
+        // 弹框登录处理函数
+        function modalLoginAction(btn) {
+            const layero = $(btn).closest('.layui-layer-content');
+            const username = layero.find('#modal-username').val();
+            const password = layero.find('#modal-password').val();
+            const remember = layero.find('#modal-remember').is(':checked') ? 1 : 0;
+            
+            if (!username || !password) {
+                layer.msg('Please enter username and password');
+                return;
+            }
+            
+            const loginBtn = layero.find('.btn-primary');
+            loginBtn.html('<span class="loading-text">Signing in...</span>');
+            loginBtn.prop('disabled', true);
+            
+            $post("/login", {
+                username: username,
+                password: password,
+                remember: remember
+            })
+            .then(function(data) {
+                loginBtn.html('Sign in');
+                loginBtn.prop('disabled', false);
+                
+                if (data.status === 0) {
+                    location.href = data.go ? data.go : "/home";
+                } else {
+                    layer.msg(data.message);
+                }
+            })
+            .catch(function() {
+                loginBtn.html('Sign in');
+                loginBtn.prop('disabled', false);
+                layer.msg('Login failed. Please try again.');
+            });
+        }
         
         function checkDomain() {
             const prefix = document.getElementById('domain-prefix').value;

@@ -78,6 +78,44 @@
                 @include('admin.layout.pagination')
             </div>
         </div>
+        
+        <!-- 删除确认模态框 -->
+        <div class="modal fade" id="deleteConfirmModal" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteConfirmModalLabel">确认删除</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>确定要删除此记录吗？</p>
+                        <div class="form-group">
+                            <label for="deleteReason">删除原因：</label>
+                            <select class="form-control" id="deleteReason" v-model="deleteReason">
+                                <option value="">-- 请选择删除原因 --</option>
+                                <option value="包含政治、宗教等敏感内容">包含政治、宗教等敏感内容</option>
+                                <option value="违反中华人民共和国法规">违反中华人民共和国法规</option>
+                                <option value="无法访问">无法访问</option>
+                                <option value="用户申请">用户申请</option>
+                                <option value="域名解析不当">域名解析不当</option>
+                                <option value="定期清理">定期清理</option>
+                                <option value="custom">自定义原因...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" v-if="deleteReason === 'custom'">
+                            <label for="customReason">自定义原因：</label>
+                            <textarea class="form-control" id="customReason" v-model="customReasonText" rows="3" placeholder="请输入删除原因"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-danger" @click="confirmDelete">确认删除</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 @endsection
 @section('foot')
@@ -89,6 +127,17 @@
                     page: 1, did: 0, name: '', type: 0, value: '', uid: $_GET('uid')
                 },
                 data: {},
+                deleteId: null,
+                deleteReason: '',
+                customReasonText: '',
+                deleteReasonMap: {
+                    '包含政治、宗教等敏感内容': 'Contains sensitive political or religious content',
+                    '违反中华人民共和国法规': 'Violates regulations of the People\'s Republic of China',
+                    '无法访问': 'Inaccessible',
+                    '用户申请': 'User request',
+                    '域名解析不当': 'Improper domain resolution',
+                    '定期清理': 'Routine cleanup'
+                }
             },
             methods: {
                 getList: function (page) {
@@ -104,18 +153,36 @@
                         })
                 },
                 del: function (id) {
-                    if (!confirm('确认删除？')) return;
+                    this.deleteId = id;
+                    this.deleteReason = '';
+                    this.customReasonText = '';
+                    $('#deleteConfirmModal').modal('show');
+                },
+                confirmDelete: function() {
+                    if (!this.deleteId) return;
+                    
                     var vm = this;
-                    this.$post("/admin/domain/record", {action: 'delete', id: id})
+                    var reason = this.deleteReason;
+                    
+                    // 如果是自定义原因，使用自定义文本
+                    if (reason === 'custom') {
+                        reason = this.customReasonText;
+                    } else if (reason && this.deleteReasonMap[reason]) {
+                        // 如果是预设原因，转换为英文（用于邮件）
+                        reason = this.deleteReasonMap[reason];
+                    }
+                    
+                    this.$post("/admin/domain/record", {action: 'delete', id: this.deleteId, reason: reason})
                         .then(function (data) {
                             if (data.status === 0) {
                                 vm.getList();
                                 vm.$message(data.message, 'success');
+                                $('#deleteConfirmModal').modal('hide');
                             } else {
                                 vm.$message(data.message, 'error');
                             }
                         });
-                },
+                }
             },
             mounted: function () {
                 this.getList();

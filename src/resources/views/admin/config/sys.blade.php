@@ -134,6 +134,18 @@
                                 <div class="input_tips">开启后，用户可以通过邀请链接邀请新用户注册</div>
                             </div>
                         </div>
+                        
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">弹框登录</label>
+                            <div class="col-sm-9">
+                                <select name="login_modal_enabled" :value="{{ config('sys.login_modal_enabled',0) }}" class="form-control">
+                                    <option value="0">关闭弹框登录</option>
+                                    <option value="1">开启弹框登录</option>
+                                </select>
+                                <div class="input_tips">开启后，点击登录按钮会弹出登录框，而不是跳转到登录页面</div>
+                            </div>
+                        </div>
+                        
                         <div class="form-group row">
                             <label for="staticEmail" class="col-sm-3 col-form-label">邀请人奖励积分</label>
                             <div class="col-sm-9">

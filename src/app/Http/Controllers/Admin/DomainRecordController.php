@@ -44,6 +44,16 @@ class DomainRecordController extends Controller
             // 获取与记录关联的域名和用户ID
             $domain = $row->domain;
             $uid = $row->uid;
+            $user = \App\Models\User::find($uid);
+            $domainName = $row->name . '.' . ($domain ? $domain->domain : '');
+            
+            // 保存记录详情用于邮件通知
+            $recordDetails = [
+                'name' => $row->name,
+                'type' => $row->type,
+                'value' => $row->value,
+                'created_at' => $row->created_at->format('Y-m-d H:i:s')
+            ];
             
             // 删除记录
             Helper::deleteRecord($row);
@@ -52,6 +62,23 @@ class DomainRecordController extends Controller
                 if ($domain && $domain->point > 0 && $uid) {
                     // 使用 User::point 方法返还积分，注意操作类型为 'refund'
                     \App\Models\User::point($uid, 'refund', $domain->point, "Admin refund for deleted record [{$row->name}.{$domain->domain}]({$row->line})");
+                }
+                
+                // 如果用户存在，发送邮件通知
+                if ($user && $user->email) {
+                    // 发送域名删除通知邮件
+                    Helper::sendEmail(
+                        $user->email,
+                        'Domain Record Deletion Notice',
+                        'email.domain-deleted',
+                        [
+                            'username' => $user->username,
+                            'domainName' => $domainName,
+                            'webName' => config('sys.web.name', 'OSFC Registry'),
+                            'reason' => $request->post('reason'), // 可选的删除原因
+                            'record' => $recordDetails // 添加记录详情
+                        ]
+                    );
                 }
                 
                 $result = ['status' => 0, 'message' => '删除成功'];
