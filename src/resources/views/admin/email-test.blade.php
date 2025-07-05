@@ -22,6 +22,18 @@
                                 密码重置邮件模板
                                 <span class="badge badge-primary badge-pill">password</span>
                             </a>
+                            <a href="{{ url('/admin/testview-email?template=user-banned') }}" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                用户封禁邮件模板
+                                <span class="badge badge-danger badge-pill">user-banned</span>
+                            </a>
+                            <a href="{{ url('/admin/testview-email?template=user-deleted') }}" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                用户删除邮件模板
+                                <span class="badge badge-danger badge-pill">user-deleted</span>
+                            </a>
+                            <a href="{{ url('/admin/testview-email?template=domain-deleted') }}" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                域名删除邮件模板
+                                <span class="badge badge-warning badge-pill">domain-deleted</span>
+                            </a>
                             <a href="{{ url('/admin/testview-email?template=test') }}" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                 邮箱配置测试邮件模板
                                 <span class="badge badge-primary badge-pill">test</span>

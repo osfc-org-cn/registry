@@ -77,6 +77,32 @@ class AdminController extends Controller
                     'url' => 'https://registry.osfc.org.cn/password?code=test_code_here'
                 ];
                 break;
+            case 'user-banned':
+                $data = [
+                    'username' => '测试用户',
+                    'webName' => config('sys.web.name', 'OSFC Registry')
+                ];
+                break;
+            case 'user-deleted':
+                $data = [
+                    'username' => '测试用户',
+                    'webName' => config('sys.web.name', 'OSFC Registry')
+                ];
+                break;
+            case 'domain-deleted':
+                $data = [
+                    'username' => '测试用户',
+                    'domainName' => 'example.osfc.org.cn',
+                    'webName' => config('sys.web.name', 'OSFC Registry'),
+                    'reason' => 'Routine cleanup',
+                    'record' => [
+                        'name' => 'example',
+                        'type' => 'A',
+                        'value' => '192.168.1.1',
+                        'created_at' => date('Y-m-d H:i:s')
+                    ]
+                ];
+                break;
             case 'test':
                 $data = [];
                 break;
