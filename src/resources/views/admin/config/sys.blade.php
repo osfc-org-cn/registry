@@ -150,6 +150,45 @@
                                 <div class="input_tips">当被邀请人注册并验证邮箱后，被邀请人额外获得的积分奖励</div>
                             </div>
                         </div>
+                        
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">验证码强度</label>
+                            <div class="col-sm-9">
+                                <select name="captcha[difficulty]" :value="{{ config('sys.captcha.difficulty', 1) }}" class="form-control" v-model="captchaDifficulty" @change="refreshCaptchaPreview">
+                                    <option value="0">简单 - 4位数字</option>
+                                    <option value="1">普通 - 4位数字字母混合</option>
+                                    <option value="2">较难 - 5位数字字母混合</option>
+                                    <option value="3">困难 - 6位数字字母混合</option>
+                                </select>
+                                <div class="input_tips">设置验证码的难度级别。越高的级别可以提供更好的安全性，但可能会降低用户体验</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">验证码图片干扰度</label>
+                            <div class="col-sm-9">
+                                <select name="captcha[noise]" :value="{{ config('sys.captcha.noise', 1) }}" class="form-control" v-model="captchaNoise" @change="refreshCaptchaPreview">
+                                    <option value="0">无干扰 - 纯文字</option>
+                                    <option value="1">低 - 少量干扰线</option>
+                                    <option value="2">中 - 适中干扰线和噪点</option>
+                                    <option value="3">高 - 大量干扰线和噪点</option>
+                                </select>
+                                <div class="input_tips">设置验证码图片的干扰程度。增加干扰可以防止自动识别，但过高的干扰可能影响用户体验</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">验证码预览</label>
+                            <div class="col-sm-9">
+                                <div class="d-flex align-items-center">
+                                    <img :src="captchaPreviewUrl" alt="验证码预览" style="height: 40px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary ml-2" @click="refreshCaptchaPreview">
+                                        <i class="fas fa-sync-alt"></i> 刷新
+                                    </button>
+                                </div>
+                                <div class="input_tips mt-2">这是当前设置下生成的验证码预览效果，可以点击刷新按钮查看不同的效果</div>
+                            </div>
+                        </div>
                     </form>
                 </div>
                 <div class="card-footer">
@@ -437,7 +476,16 @@
     <script>
         new Vue({
             el: '#vue',
-            data: {},
+            data: function () {
+                return {
+                    captchaDifficulty: {{ config('sys.captcha.difficulty', 1) }},
+                    captchaNoise: {{ config('sys.captcha.noise', 1) }},
+                    captchaPreviewUrl: ''
+                };
+            },
+            mounted: function () {
+                this.refreshCaptchaPreview();
+            },
             methods: {
                 form: function (id) {
                     var vm = this;
@@ -450,8 +498,9 @@
                             }
                         });
                 },
-            },
-            mounted: function () {
+                refreshCaptchaPreview: function () {
+                    this.captchaPreviewUrl = "/captcha/preview?difficulty=" + this.captchaDifficulty + "&noise=" + this.captchaNoise + "&_=" + Math.random();
+                }
             }
         });
     </script>

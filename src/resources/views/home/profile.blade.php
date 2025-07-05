@@ -90,6 +90,47 @@
                     </div>
                     @endif
                     
+                    @if(config('sys.nodeloc_auth_enabled', '0') === '1')
+                    <div class="mdui-panel mdui-panel-popout" mdui-panel>
+                        <div class="mdui-panel-item">
+                            <div class="mdui-panel-item-header">
+                                <div class="mdui-panel-item-title">Nodeloc Authentication</div>
+                                <div class="mdui-panel-item-summary">
+                                    @php
+                                        $nodelocAuth = \App\Models\UserThird::where('user_id', auth()->user()->uid)
+                                            ->where('platform', 'nodeloc')
+                                            ->first();
+                                    @endphp
+                                    @if($nodelocAuth)
+                                        Connected: {{ $nodelocAuth->openid }}
+                                    @else
+                                        Not Connected
+                                    @endif
+                                </div>
+                                <i class="mdui-panel-item-arrow mdui-icon material-icons">keyboard_arrow_down</i>
+                            </div>
+                            <div class="mdui-panel-item-body">
+                                <p>Connect your Nodeloc account for easier login and account management.</p>
+                                
+                                @if($nodelocAuth)
+                                    <div class="mdui-textfield">
+                                        <label class="mdui-textfield-label">Nodeloc ID</label>
+                                        <input class="mdui-textfield-input" type="text" value="{{ $nodelocAuth->openid }}" disabled/>
+                                    </div>
+                                    <form id="form-nodeloc-unbind">
+                                        <input type="hidden" name="action" value="nodeloc_unbind">
+                                        <button class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-red-accent" type="button" @click="unbindNodeloc">Disconnect Nodeloc</button>
+                                    </form>
+                                @else
+                                    <a href="{{ route('nodeloc.redirect') }}" class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme-accent">
+                                        <i class="mdui-icon material-icons">link</i> Connect Nodeloc Account
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                    
                     <div class="mdui-textfield">
                         <label class="mdui-textfield-label">Status</label>
                         <select class="mdui-select" :value="{{ auth()->user()->status }}" disabled>
@@ -169,6 +210,29 @@
                             } else {
                                 mdui.snackbar({
                                     message: data.message || 'Failed to disconnect GitHub account',
+                                    position: 'bottom',
+                                    timeout: 2000
+                                });
+                            }
+                        });
+                },
+                unbindNodeloc: function() {
+                    var vm = this;
+                    this.$post("/nodeloc/unbind", {})
+                        .then(function (data) {
+                            if (data.status === 0) {
+                                mdui.snackbar({
+                                    message: data.message || 'Nodeloc account disconnected successfully',
+                                    position: 'bottom',
+                                    timeout: 2000
+                                });
+                                // 刷新页面以显示更新后的状态
+                                setTimeout(function() {
+                                    window.location.reload();
+                                }, 2000);
+                            } else {
+                                mdui.snackbar({
+                                    message: data.message || 'Failed to disconnect Nodeloc account',
                                     position: 'bottom',
                                     timeout: 2000
                                 });

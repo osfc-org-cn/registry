@@ -135,3 +135,27 @@ INSERT INTO `kldns_configs` VALUES ('github_auth_enabled', '0');
 INSERT INTO `kldns_configs` VALUES ('github_client_id', '');
 INSERT INTO `kldns_configs` VALUES ('github_client_secret', '');
 INSERT INTO `kldns_configs` VALUES ('github_auth_required_days', '180');
+
+-- 第三方登录表
+DROP TABLE IF EXISTS `kldns_user_third`;
+CREATE TABLE `kldns_user_third` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL COMMENT '用户ID',
+  `platform` varchar(20) NOT NULL COMMENT '平台名称',
+  `openid` varchar(64) NOT NULL COMMENT '第三方平台用户ID',
+  `nickname` varchar(64) DEFAULT NULL COMMENT '第三方平台昵称',
+  `avatar` varchar(255) DEFAULT NULL COMMENT '头像URL',
+  `access_token` text DEFAULT NULL COMMENT '访问令牌',
+  `refresh_token` text DEFAULT NULL COMMENT '刷新令牌',
+  `expires_at` int(10) unsigned DEFAULT NULL COMMENT '令牌过期时间',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `platform_openid` (`platform`,`openid`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='第三方登录表';
+
+-- Nodeloc认证配置
+INSERT INTO `kldns_configs` VALUES ('nodeloc_auth_enabled', '0');
+INSERT INTO `kldns_configs` VALUES ('nodeloc_client_id', '');
+INSERT INTO `kldns_configs` VALUES ('nodeloc_client_secret', '');

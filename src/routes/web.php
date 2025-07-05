@@ -12,6 +12,7 @@
 */
 
 Route::get('captcha', 'Index\IndexController@captcha');//验证码
+Route::get('captcha/preview', 'Index\IndexController@captchaPreview');//验证码预览
 Route::any('login', 'Auth\LoginController@userLogin')->name('login');//登录
 Route::post('reg', 'Index\IndexController@reg');//注册
 Route::get('register', 'Index\IndexController@registerForm');//注册页面
@@ -100,6 +101,9 @@ Route::prefix('admin')->middleware('auth:admin', 'auth.session:admin')->namespac
         Route::get('github', function () {
             return view('admin.config.github');
         });
+        Route::get('nodeloc', function () {
+            return view('admin.config.nodeloc');
+        });
         Route::post('/', 'ConfigController@post');
     });
 
@@ -120,3 +124,10 @@ Route::prefix('admin')->middleware('auth:admin', 'auth.session:admin')->namespac
 Route::get('/github/redirect', 'GithubAuthController@redirect')->name('github.redirect');
 Route::get('/github/callback', 'GithubAuthController@callback')->name('github.callback');
 Route::post('/github/unbind', 'GithubAuthController@unbind')->name('github.unbind');
+Route::get('/github/login', 'GithubAuthController@login')->name('github.login');
+
+// Nodeloc认证路由
+Route::match(['get', 'post'], '/nodeloc/redirect', 'NodelocAuthController@redirect')->name('nodeloc.redirect');
+Route::get('/nodeloc/callback', 'NodelocAuthController@callback')->name('nodeloc.callback');
+Route::post('/nodeloc/unbind', 'NodelocAuthController@unbind')->name('nodeloc.unbind');
+Route::get('/nodeloc/login', 'NodelocAuthController@login')->name('nodeloc.login');

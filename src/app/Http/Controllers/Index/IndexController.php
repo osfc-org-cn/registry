@@ -21,6 +21,7 @@ use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 
@@ -263,6 +264,63 @@ class IndexController extends Controller
         } elseif (User::where('email', $data['email'])->first()) {
             $result['message'] = 'This email address has already been registered.';
         } elseif ($user = User::create($data)) {
+            // 检查是否有GitHub信息，并处理绑定
+            $githubUserInfo = session('github_user_info');
+            $githubAccessToken = session('github_access_token');
+            
+            if ($githubUserInfo && $githubAccessToken) {
+                try {
+                    // 创建GitHub授权关联
+                    \App\Models\GithubAuth::create([
+                        'uid' => $user->uid,
+                        'github_id' => $githubUserInfo['id'],
+                        'github_login' => $githubUserInfo['login'],
+                        'github_name' => $githubUserInfo['name'] ?? null,
+                        'github_email' => $githubUserInfo['email'] ?? null,
+                        'github_created_at' => $githubUserInfo['created_at'],
+                        'access_token' => $githubAccessToken,
+                        'created_at' => time(),
+                        'updated_at' => time(),
+                    ]);
+                    
+                    // 清除session中的GitHub信息
+                    session()->forget(['github_user_info', 'github_access_token']);
+                    
+                    $result['github_linked'] = true;
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to link GitHub account during registration: ' . $e->getMessage());
+                }
+            }
+            
+            // 检查是否有Nodeloc信息，并处理绑定
+            $nodelocUserInfo = session('nodeloc_user_info');
+            $nodelocAccessToken = session('nodeloc_access_token');
+            $nodelocRefreshToken = session('nodeloc_refresh_token');
+            $nodelocExpiresIn = session('nodeloc_expires_in');
+            
+            if ($nodelocUserInfo && $nodelocAccessToken) {
+                try {
+                    // 创建Nodeloc授权关联
+                    \App\Models\UserThird::create([
+                        'user_id' => $user->uid,
+                        'platform' => 'nodeloc',
+                        'openid' => $nodelocUserInfo['sub'],
+                        'nickname' => $nodelocUserInfo['username'] ?? '',
+                        'avatar' => $nodelocUserInfo['picture'] ?? '',
+                        'access_token' => $nodelocAccessToken,
+                        'refresh_token' => $nodelocRefreshToken,
+                        'expires_at' => $nodelocExpiresIn ? time() + $nodelocExpiresIn : null
+                    ]);
+                    
+                    // 清除session中的Nodeloc信息
+                    session()->forget(['nodeloc_user_info', 'nodeloc_access_token', 'nodeloc_refresh_token', 'nodeloc_expires_in']);
+                    
+                    $result['nodeloc_linked'] = true;
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to link Nodeloc account during registration: ' . $e->getMessage());
+                }
+            }
+            
             // 处理邀请关系
             $inviteCode = $request->post('invite');
             if (!empty($inviteCode) && config('sys.invite.enabled', 0) == 1) {
@@ -277,10 +335,25 @@ class IndexController extends Controller
             }
             
             if ($data['status'] === 2) {
-                $result = ['status' => 0, 'message' => "Congratulations, registration successful! You can login now."];
+                $message = "Congratulations, registration successful!";
+                if (isset($result['github_linked']) && $result['github_linked']) {
+                    $message .= " Your GitHub account has been linked.";
+                }
+                if (isset($result['nodeloc_linked']) && $result['nodeloc_linked']) {
+                    $message .= " Your Nodeloc account has been linked.";
+                }
+                $message .= " You can login now.";
+                $result = ['status' => 0, 'message' => $message];
             } else {
                 Helper::sendVerifyEmail($user);
-                $result = ['status' => 0, 'message' => "Congratulations, registration successful. An activation email has been sent to your email address: {$data['email']}, please check."];
+                $message = "Congratulations, registration successful. An activation email has been sent to your email address: {$data['email']}, please check.";
+                if (isset($result['github_linked']) && $result['github_linked']) {
+                    $message .= " Your GitHub account has been linked.";
+                }
+                if (isset($result['nodeloc_linked']) && $result['nodeloc_linked']) {
+                    $message .= " Your Nodeloc account has been linked.";
+                }
+                $result = ['status' => 0, 'message' => $message];
             }
         } else {
             $result['message'] = 'Registration failed, please try again later.';
@@ -310,22 +383,169 @@ class IndexController extends Controller
     public function captcha(Request $request)
     {
         $phrase = new PhraseBuilder();
-        // 设置验证码位数
-        $code = $phrase->build(5);
+        
+        // 获取验证码难度设置
+        $difficulty = intval(config('sys.captcha.difficulty', 1));
+        $noise = intval(config('sys.captcha.noise', 1));
+        
+        // 根据难度设置验证码长度和字符类型
+        switch ($difficulty) {
+            case 0: // 简单 - 4位数字
+                $length = 4;
+                $code = $phrase->build($length, '0123456789');
+                break;
+            case 1: // 普通 - 4位数字字母混合
+                $length = 4;
+                $code = $phrase->build($length);
+                break;
+            case 2: // 较难 - 5位数字字母混合
+                $length = 5;
+                $code = $phrase->build($length);
+                break;
+            case 3: // 困难 - 6位数字字母混合
+                $length = 6;
+                $code = $phrase->build($length);
+                break;
+            default:
+                $length = 4;
+                $code = $phrase->build($length);
+        }
+        
         // 生成验证码图片的Builder对象，配置相应属性
         $builder = new CaptchaBuilder($code, $phrase);
+        
         // 设置背景颜色
         $builder->setBackgroundColor(220, 210, 230);
-        $builder->setMaxAngle(30);
-        $builder->setMaxBehindLines(5);
-        $builder->setMaxFrontLines(5);
+        
+        // 根据干扰度设置干扰线条和角度
+        switch ($noise) {
+            case 0: // 无干扰
+                $builder->setMaxAngle(0);
+                $builder->setMaxBehindLines(0);
+                $builder->setMaxFrontLines(0);
+                break;
+            case 1: // 低干扰
+                $builder->setMaxAngle(10);
+                $builder->setMaxBehindLines(2);
+                $builder->setMaxFrontLines(2);
+                break;
+            case 2: // 中等干扰
+                $builder->setMaxAngle(20);
+                $builder->setMaxBehindLines(5);
+                $builder->setMaxFrontLines(5);
+                break;
+            case 3: // 高干扰
+                $builder->setMaxAngle(30);
+                $builder->setMaxBehindLines(8);
+                $builder->setMaxFrontLines(8);
+                $builder->setDistortion(true);
+                break;
+            default:
+                $builder->setMaxAngle(20);
+                $builder->setMaxBehindLines(5);
+                $builder->setMaxFrontLines(5);
+        }
+        
         // 可以设置图片宽高及字体
-        $builder->build($width = 120, $height = 40, $font = null);
+        $width = 120;
+        if ($length > 4) {
+            $width = 120 + (($length - 4) * 20); // 根据长度增加宽度
+        }
+        $builder->build($width, $height = 40, $font = null);
+        
         // 获取验证码的内容
         $phrase = $builder->getPhrase();
+        
         // 把内容存入session
-        Session::flash('captcha_code', $phrase);
+        Session::flash('captcha_code', strtolower($phrase)); // 转为小写存储，便于验证
+        
         // 生成图片
+        header('Content-type: image/jpeg');
+        $builder->output();
+        $content = ob_get_clean();
+        return response($content, 200, ['Content-Type' => 'image/jpeg',]);
+    }
+
+    /**
+     * 仅用于管理后台预览验证码效果，不存储session
+     */
+    public function captchaPreview(Request $request)
+    {
+        $phrase = new PhraseBuilder();
+        
+        // 从请求中获取难度和干扰度
+        $difficulty = intval($request->query('difficulty', 1));
+        $noise = intval($request->query('noise', 1));
+        
+        // 根据难度设置验证码长度和字符类型
+        switch ($difficulty) {
+            case 0: // 简单 - 4位数字
+                $length = 4;
+                $code = $phrase->build($length, '0123456789');
+                break;
+            case 1: // 普通 - 4位数字字母混合
+                $length = 4;
+                $code = $phrase->build($length);
+                break;
+            case 2: // 较难 - 5位数字字母混合
+                $length = 5;
+                $code = $phrase->build($length);
+                break;
+            case 3: // 困难 - 6位数字字母混合
+                $length = 6;
+                $code = $phrase->build($length);
+                break;
+            default:
+                $length = 4;
+                $code = $phrase->build($length);
+        }
+        
+        // 生成验证码图片的Builder对象，配置相应属性
+        $builder = new CaptchaBuilder($code, $phrase);
+        
+        // 设置背景颜色
+        $builder->setBackgroundColor(220, 210, 230);
+        
+        // 根据干扰度设置干扰线条和角度
+        switch ($noise) {
+            case 0: // 无干扰
+                $builder->setMaxAngle(0);
+                $builder->setMaxBehindLines(0);
+                $builder->setMaxFrontLines(0);
+                break;
+            case 1: // 低干扰
+                $builder->setMaxAngle(10);
+                $builder->setMaxBehindLines(2);
+                $builder->setMaxFrontLines(2);
+                break;
+            case 2: // 中等干扰
+                $builder->setMaxAngle(20);
+                $builder->setMaxBehindLines(5);
+                $builder->setMaxFrontLines(5);
+                break;
+            case 3: // 高干扰
+                $builder->setMaxAngle(30);
+                $builder->setMaxBehindLines(8);
+                $builder->setMaxFrontLines(8);
+                $builder->setDistortion(true);
+                break;
+            default:
+                $builder->setMaxAngle(20);
+                $builder->setMaxBehindLines(5);
+                $builder->setMaxFrontLines(5);
+        }
+        
+        // 可以设置图片宽高及字体
+        $width = 120;
+        if ($length > 4) {
+            $width = 120 + (($length - 4) * 20); // 根据长度增加宽度
+        }
+        $builder->build($width, $height = 40, $font = null);
+        
+        // 仅用于预览，不保存到session
+        
+        // 生成图片
+        header('Content-type: image/jpeg');
         $builder->output();
         $content = ob_get_clean();
         return response($content, 200, ['Content-Type' => 'image/jpeg',]);

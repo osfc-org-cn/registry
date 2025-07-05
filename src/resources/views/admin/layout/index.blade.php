@@ -76,6 +76,11 @@
                         </a>
                     </li>
                     <li>
+                        <a href="/admin/config/nodeloc">
+                            <i class="fa fa-caret-right"></i> Nodeloc认证配置
+                        </a>
+                    </li>
+                    <li>
                         <a href="/admin/email-test">
                             <i class="fa fa-caret-right"></i> 邮件模板测试
                         </a>

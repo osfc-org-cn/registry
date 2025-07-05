@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use GuzzleHttp\Client;
 
 class GithubAuthController extends Controller
@@ -16,7 +17,7 @@ class GithubAuthController extends Controller
      *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function redirect()
+    public function redirect(Request $request)
     {
         if (config('sys.github_auth_enabled', '0') !== '1') {
             return redirect('/')->with('error', 'GitHub authentication is disabled');
@@ -29,7 +30,16 @@ class GithubAuthController extends Controller
 
         $redirectUrl = url('/github/callback');
         $state = md5(uniqid(rand(), true));
+        
+        // 保存状态和操作类型（绑定或登录）到Session
+        $action = $request->query('action', 'bind'); // 默认为绑定操作
         session(['github_state' => $state]);
+        session(['github_action' => $action]);
+        
+        // 如果是登录操作，保存原始请求的URL用于登录后重定向
+        if ($action === 'login') {
+            session(['github_redirect_after_login' => $request->query('redirect', '/')]);
+        }
 
         $url = 'https://github.com/login/oauth/authorize?' . http_build_query([
             'client_id' => $clientId,
@@ -97,41 +107,79 @@ class GithubAuthController extends Controller
             
             $userInfo = json_decode($userResponse->getBody(), true);
 
+            // 获取操作类型（绑定或登录）
+            $action = session('github_action', 'bind');
+            
+            // 检查GitHub账号是否已绑定到用户
+            $existingAuth = GithubAuth::getByGithubId($userInfo['id']);
+            
             // 检查账号注册时间
             $requiredDays = intval(config('sys.github_auth_required_days', 180));
             $githubCreatedAt = strtotime($userInfo['created_at']);
             $minCreationTime = time() - ($requiredDays * 86400);
-
-            // 创建或更新GitHub认证信息
-            if (Auth::check()) {
-                $user = Auth::user();
-                $existingAuth = GithubAuth::getByGithubId($userInfo['id']);
-                
-                if ($existingAuth && $existingAuth->uid != $user->uid) {
-                    return redirect('/')->with('error', 'This GitHub account is already linked to another user');
+            
+            // 如果是登录操作
+            if ($action === 'login') {
+                // 如果GitHub账号已绑定到某个用户
+                if ($existingAuth) {
+                    $user = User::find($existingAuth->uid);
+                    if ($user && $user->status != 0) { // 确保用户账号未被禁用
+                        // 登录用户
+                        Auth::login($user);
+                        
+                        // 更新访问令牌
+                        $existingAuth->update([
+                            'access_token' => $accessToken,
+                            'updated_at' => time(),
+                        ]);
+                        
+                        // 重定向到登录后的页面
+                        $redirectUrl = session('github_redirect_after_login', '/');
+                        session()->forget(['github_state', 'github_action', 'github_redirect_after_login']);
+                        return redirect($redirectUrl)->with('success', 'Logged in successfully with GitHub');
+                    } else {
+                        return redirect('/login')->with('error', 'This account is disabled or does not exist');
+                    }
+                } else {
+                    // GitHub账号未绑定到任何用户，提示注册并绑定
+                    session(['github_user_info' => $userInfo]);
+                    session(['github_access_token' => $accessToken]);
+                    return redirect('/register')->with('notice', 'Your GitHub account is not linked to any user. Please register or login first, then link your account.');
                 }
-                
-                GithubAuth::updateOrCreate(
-                    ['uid' => $user->uid],
-                    [
-                        'github_id' => $userInfo['id'],
-                        'github_login' => $userInfo['login'],
-                        'github_name' => $userInfo['name'] ?? null,
-                        'github_email' => $userInfo['email'] ?? null,
-                        'github_created_at' => $userInfo['created_at'],
-                        'access_token' => $accessToken,
-                        'created_at' => time(),
-                        'updated_at' => time(),
-                    ]
-                );
+            }
+            // 如果是绑定操作
+            else {
+                if (Auth::check()) {
+                    $user = Auth::user();
+                    
+                    // 检查GitHub账号是否已绑定到其他用户
+                    if ($existingAuth && $existingAuth->uid != $user->uid) {
+                        return redirect('/home/profile')->with('error', 'This GitHub account is already linked to another user');
+                    }
+                    
+                    // 更新或创建GitHub认证信息
+                    GithubAuth::updateOrCreate(
+                        ['uid' => $user->uid],
+                        [
+                            'github_id' => $userInfo['id'],
+                            'github_login' => $userInfo['login'],
+                            'github_name' => $userInfo['name'] ?? null,
+                            'github_email' => $userInfo['email'] ?? null,
+                            'github_created_at' => $userInfo['created_at'],
+                            'access_token' => $accessToken,
+                            'created_at' => time(),
+                            'updated_at' => time(),
+                        ]
+                    );
 
-                $message = $githubCreatedAt <= $minCreationTime ? 
-                    'GitHub account verified successfully. You can now add NS and MX records.' : 
-                    'GitHub account linked successfully, but your account is less than ' . $requiredDays . ' days old. You cannot add NS and MX records yet.';
+                    $message = $githubCreatedAt <= $minCreationTime ? 
+                        'GitHub account verified successfully. You can now add NS and MX records.' : 
+                        'GitHub account linked successfully, but your account is less than ' . $requiredDays . ' days old. You cannot add NS and MX records yet.';
 
-                return redirect('/home/profile')->with('success', $message);
-            } else {
-                return redirect()->route('login')->with('error', 'Please login first');
+                    return redirect('/home/profile')->with('success', $message);
+                } else {
+                    return redirect()->route('login')->with('error', 'Please login first');
+                }
             }
         } catch (\Exception $e) {
             Log::error('GitHub OAuth authentication failed: ' . $e->getMessage());
@@ -191,5 +239,21 @@ class GithubAuthController extends Controller
         
         // 检查GitHub账号是否符合要求
         return $auth->isQualified();
+    }
+    
+    /**
+     * GitHub登录入口
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function login(Request $request)
+    {
+        // 添加action=login参数并重定向到GitHub授权页面
+        $redirectUrl = url()->current();
+        if ($request->has('redirect')) {
+            $redirectUrl .= '?redirect=' . $request->query('redirect');
+        }
+        
+        return redirect('/github/redirect?action=login&redirect=' . urlencode($request->query('redirect', '/')));
     }
 } 
