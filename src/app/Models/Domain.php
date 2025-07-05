@@ -30,4 +30,12 @@ class Domain extends Model
     {
         return $this->belongsTo(DnsConfig::class, 'dns', 'dns');
     }
+    
+    /**
+     * 获取域名关联的所有记录
+     */
+    public function records()
+    {
+        return $this->hasMany(DomainRecord::class, 'did', 'did');
+    }
 }

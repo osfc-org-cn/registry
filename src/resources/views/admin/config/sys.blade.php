@@ -482,6 +482,42 @@
                 </div>
             </div>
         </div>
+        <div class="col-12 col-md-6 mt-2">
+            <div class="card">
+                <div class="card-header">
+                    API配置
+                </div>
+                <div class="card-body">
+                    <form id="form-api">
+                        <input type="hidden" name="action" value="config">
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">API密钥</label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <input type="text" name="api[key]" class="form-control" placeholder="API密钥，留空则禁用API"
+                                           value="{{ config('sys.api.key') }}" id="apiKey">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-outline-secondary" @click="generateApiKey">生成</button>
+                                        <button type="button" class="btn btn-outline-secondary" @click="copyApiKey">复制</button>
+                                    </div>
+                                </div>
+                                <div class="input_tips">API密钥用于验证API请求，请妥善保管。留空则禁用API。</div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">API文档</label>
+                            <div class="col-sm-9">
+                                <a href="/admin/api-docs" target="_blank" class="btn btn-sm btn-outline-primary">查看API文档</a>
+                                <div class="input_tips mt-2">查看API文档和使用示例</div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer">
+                    <a class="btn btn-info text-white float-right" @click="form('api')">保存</a>
+                </div>
+            </div>
+        </div>
     </div>
 @endsection
 @section('foot')
@@ -512,6 +548,21 @@
                 },
                 refreshCaptchaPreview: function () {
                     this.captchaPreviewUrl = "/captcha/preview?difficulty=" + this.captchaDifficulty + "&noise=" + this.captchaNoise + "&_=" + Math.random();
+                },
+                generateApiKey: function() {
+                    // 生成32位随机字符串作为API密钥
+                    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                    var apiKey = '';
+                    for (var i = 0; i < 32; i++) {
+                        apiKey += chars.charAt(Math.floor(Math.random() * chars.length));
+                    }
+                    document.getElementById('apiKey').value = apiKey;
+                },
+                copyApiKey: function() {
+                    var apiKeyInput = document.getElementById('apiKey');
+                    apiKeyInput.select();
+                    document.execCommand('copy');
+                    this.$message('API密钥已复制到剪贴板', 'success');
                 }
             }
         });

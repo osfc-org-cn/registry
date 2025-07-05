@@ -85,6 +85,11 @@
                             <i class="fa fa-caret-right"></i> 邮件模板测试
                         </a>
                     </li>
+                    <li>
+                        <a href="/admin/api-docs">
+                            <i class="fa fa-caret-right"></i> API文档
+                        </a>
+                    </li>
                 </ul>
             </div>
             <div class="menu-item">
