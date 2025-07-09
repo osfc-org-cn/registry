@@ -192,8 +192,14 @@ class HomeController extends Controller
             $result['message'] = 'Record does not exist';
         } elseif (!$data['value']) {
             $result['message'] = 'Please enter the record value';
-        } elseif (!$id && DomainRecord::where('did', $data['did'])->where('name', $data['name'])->where('uid', '!=', Auth::id())->where('line_id', $data['line_id'])->first()) {
-            $result['message'] = 'This host record has been used';
+        } elseif (!$id && DomainRecord::where('did', $data['did'])
+                             ->where('name', $data['name'])
+                             ->where('uid', '!=', Auth::id())
+                             ->where('line_id', $data['line_id'])
+                             ->first()) {
+            // User-to-user isolation check
+            // Check if there's already a record with the same name, domain and line but belonging to another user
+            $result['message'] = 'This host record is already in use by another user';
         } elseif (!$domain = Domain::available()->where('did', $data['did'])->first()) {
             $result['message'] = 'Domain does not exist, or no permission';
         } elseif (!$dns = $domain->dnsConfig) {
@@ -201,6 +207,56 @@ class HomeController extends Controller
         } elseif (!$_dns = \App\Klsf\Dns\Helper::getModel($dns->dns)) {
             $result['message'] = 'Domain configuration error [Unsupported]';
         } else {
+            // Check if record conflicts with service provider records
+            // This prevents conflicts between user records and provider records
+            if (!$id) {
+                try {
+                    $_dns->config($dns->config);
+                    
+                    // Get records directly from the DNS service provider API
+                    list($records, $error) = $_dns->getDomainRecords($domain->domain_id, $domain->domain);
+                    
+                    if (is_array($records)) {
+                        // Flag to track if we found a matching record
+                        $foundMatchingRecord = false;
+                        
+                        foreach ($records as $remoteRecord) {
+                            // Get record name (compatible with different provider formats)
+                            $recordName = isset($remoteRecord['Name']) ? $remoteRecord['Name'] : 
+                                         (isset($remoteRecord['name']) ? $remoteRecord['name'] : null);
+                                         
+                            // Get record ID (compatible with different provider formats)
+                            $recordId = isset($remoteRecord['RecordId']) ? $remoteRecord['RecordId'] : 
+                                       (isset($remoteRecord['id']) ? $remoteRecord['id'] : null);
+                            
+                            // Check if record name matches (case insensitive)
+                            if ($recordName && strtolower($recordName) === strtolower($data['name'])) {
+                                $foundMatchingRecord = true;
+                                
+                                // Check if this record exists in our database
+                                $existingRecord = DomainRecord::where('record_id', $recordId)->first();
+                                
+                                if ($existingRecord) {
+                                    // Record exists in database, check if it belongs to current user
+                                    if ($existingRecord->uid != Auth::id()) {
+                                        $result['message'] = 'This host record is already in use by another user';
+                                        return $result;
+                                    }
+                                    // If it's the current user's record, allow to continue (might be an update)
+                                } else {
+                                    // Record exists at provider but not in database, likely manually added by provider
+                                    $result['message'] = 'This host record already exists at the service provider, please use a different name';
+                                    return $result;
+                                }
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Failed to check provider records: ' . $e->getMessage());
+                    // If check fails, continue processing
+                }
+            }
+            
             // 检查是否为NS或MX记录，如果是，检查GitHub认证
             if (in_array($data['type'], ['NS', 'MX']) && config('sys.github_auth_enabled', '0') === '1') {
                 if (!GithubAuthController::canAddSpecialRecords(Auth::id())) {
