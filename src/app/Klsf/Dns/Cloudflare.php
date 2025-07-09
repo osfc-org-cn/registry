@@ -32,37 +32,28 @@ class Cloudflare implements DnsInterface
         $params['content'] = $Value;
         $params['proxied'] = $LineId ? true : false;
         
-        // 处理MX记录优先级
-        if ($Type === 'MX' && $Options && isset($Options['mx'])) {
-            $params['priority'] = intval($Options['mx']);
-        }
-        
-        // 处理SRV记录特殊参数
-        if ($Type === 'SRV' && $Options) {
-            // 解析SRV名称格式：_service._protocol
-            $nameParts = explode('.', $Name);
-            $srvParts = [];
-            
-            // 提取服务和协议部分
-            foreach ($nameParts as $part) {
-                if (strpos($part, '_') === 0) {
-                    $srvParts[] = substr($part, 1); // 去掉下划线前缀
-                }
+        // Handle special record types with additional options
+        if ($Options !== null) {
+            // Handle MX records
+            if ($Type === 'MX' && isset($Options['mx'])) {
+                $params['priority'] = (int)$Options['mx'];
             }
             
-            // 构建Cloudflare所需的data结构
-            $params['data'] = [
-                'service' => isset($srvParts[0]) ? $srvParts[0] : '',
-                'proto' => isset($srvParts[1]) ? $srvParts[1] : '',
-                'name' => str_replace(['_' . $srvParts[0] . '._' . $srvParts[1] . '.', '_' . $srvParts[0] . '._' . $srvParts[1]], '', $Name),
-                'priority' => isset($Options['priority']) ? intval($Options['priority']) : 0,
-                'weight' => isset($Options['weight']) ? intval($Options['weight']) : 0,
-                'port' => isset($Options['port']) ? intval($Options['port']) : 0,
-                'target' => rtrim($Value, '.') // 确保目标不以点结尾
-            ];
-            
-            // 对于Cloudflare，content字段不再需要
-            unset($params['content']);
+            // Handle SRV records
+            if ($Type === 'SRV') {
+                if (isset($Options['priority'])) {
+                    $params['priority'] = (int)$Options['priority'];
+                }
+                if (isset($Options['weight'])) {
+                    $params['weight'] = (int)$Options['weight'];
+                }
+                if (isset($Options['port'])) {
+                    $params['port'] = (int)$Options['port'];
+                }
+                if (isset($Options['target'])) {
+                    $params['content'] = $Options['target'];
+                }
+            }
         }
         
         list($ret, $error) = $this->getResult("zones/{$DomainId}/dns_records/{$RecordId}", $params, 'PUT');
@@ -77,48 +68,41 @@ class Cloudflare implements DnsInterface
         $params['content'] = $Value;
         $params['proxied'] = $LineId ? true : false;
         
-        // 处理MX记录优先级
-        if ($Type === 'MX' && $Options && isset($Options['mx'])) {
-            $params['priority'] = intval($Options['mx']);
-        }
-        
-        // 处理SRV记录特殊参数
-        if ($Type === 'SRV' && $Options) {
-            // 解析SRV名称格式：_service._protocol
-            $nameParts = explode('.', $Name);
-            $srvParts = [];
-            
-            // 提取服务和协议部分
-            foreach ($nameParts as $part) {
-                if (strpos($part, '_') === 0) {
-                    $srvParts[] = substr($part, 1); // 去掉下划线前缀
-                }
+        // Handle special record types with additional options
+        if ($Options !== null) {
+            // Handle MX records
+            if ($Type === 'MX' && isset($Options['mx'])) {
+                $params['priority'] = (int)$Options['mx'];
             }
             
-            // 构建Cloudflare所需的data结构
-            $params['data'] = [
-                'service' => isset($srvParts[0]) ? $srvParts[0] : '',
-                'proto' => isset($srvParts[1]) ? $srvParts[1] : '',
-                'name' => str_replace(['_' . $srvParts[0] . '._' . $srvParts[1] . '.', '_' . $srvParts[0] . '._' . $srvParts[1]], '', $Name),
-                'priority' => isset($Options['priority']) ? intval($Options['priority']) : 0,
-                'weight' => isset($Options['weight']) ? intval($Options['weight']) : 0,
-                'port' => isset($Options['port']) ? intval($Options['port']) : 0,
-                'target' => rtrim($Value, '.') // 确保目标不以点结尾
-            ];
-            
-            // 对于Cloudflare，content字段不再需要
-            unset($params['content']);
+            // Handle SRV records
+            if ($Type === 'SRV') {
+                if (isset($Options['priority'])) {
+                    $params['priority'] = (int)$Options['priority'];
+                }
+                if (isset($Options['weight'])) {
+                    $params['weight'] = (int)$Options['weight'];
+                }
+                if (isset($Options['port'])) {
+                    $params['port'] = (int)$Options['port'];
+                }
+                if (isset($Options['target'])) {
+                    $params['content'] = $Options['target'];
+                }
+            }
         }
         
         list($ret, $error) = $this->getResult("zones/{$DomainId}/dns_records", $params, 'POST');
         if (!$ret) return [false, $error];
         if (isset($ret['result']['id'])) {
             $record = $ret['result'];
-            return [[
+            $recordData = [
                 'RecordId' => $record['id'],
                 'Name' => $record['name'],
-                'Domain' => $record['zone_name']
-            ], null];
+                'Domain' => $Domain
+            ];
+            // 返回格式与其他DNS接口一致：[[数据], null]
+            return [[$recordData], null];
         }
         return [false, '添加域名记录失败'];
     }
@@ -134,7 +118,7 @@ class Cloudflare implements DnsInterface
                 'Name' => $record['name'],
                 'Type' => $record['type'],
                 'Value' => $record['content'],
-                'Domain' => $record['zone_name']
+                'Domain' => isset($record['zone_name']) ? $record['zone_name'] : $Domain
             ], null];
         }
         return [false, '获取域名记录详情失败'];
@@ -153,7 +137,7 @@ class Cloudflare implements DnsInterface
                     'Name' => $record['name'],
                     'Type' => $record['type'],
                     'Value' => $record['content'],
-                    'Domain' => $record['zone_name']
+                    'Domain' => isset($record['zone_name']) ? $record['zone_name'] : $Domain
                 ];
             }
             return [$list, null];
