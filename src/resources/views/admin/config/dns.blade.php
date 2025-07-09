@@ -56,11 +56,16 @@
                                 <div class="col-sm-9">
                                     <select name="dns" class="form-control" v-model="storeInfo.dns">
                                         <option value="0">请选择域名解析平台</option>
-                                        <option v-for="(config,dns) in dnsList" :value="dns">@{{ dns }}</option>
+                                        <option v-for="(config,dns) in dnsList" :value="dns" :disabled="isDisabled(dns)" :class="{'text-muted': isDisabled(dns)}">
+                                            @{{ dns }} <span v-if="isDisabled(dns)" class="text-danger">(此版本不可用)</span>
+                                        </option>
                                     </select>
+                                    <small class="form-text text-muted" v-if="storeInfo.dns === 'Cloudflare'">
+                                        Cloudflare在当前版本中不可用。如需启用，请在控制台执行: <code>window.enableCloudflare = true;</code>
+                                    </small>
                                 </div>
                             </div>
-                            <template v-if="storeInfo.dns!=0">
+                            <template v-if="storeInfo.dns!=0 && !isDisabled(storeInfo.dns)">
                                 <div class="form-group row" v-for="(config,i) in dnsList[storeInfo.dns]" :key="i">
                                     <label for="staticEmail" class="col-sm-3 col-form-label">@{{ config.name }}</label>
                                     <div class="col-sm-9">
@@ -75,7 +80,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
-                        <button type="button" class="btn btn-primary" @click="form('store')">保存</button>
+                        <button type="button" class="btn btn-primary" @click="form('store')" :disabled="isDisabled(storeInfo.dns)">保存</button>
                     </div>
                 </div>
             </div>
@@ -95,6 +100,13 @@
                 dnsList: []
             },
             methods: {
+                isDisabled: function(dns) {
+                    // 默认禁用Cloudflare，除非通过控制台命令启用
+                    if (dns === 'Cloudflare') {
+                        return !window.enableCloudflare;
+                    }
+                    return false;
+                },
                 getList: function (page) {
                     var vm = this;
                     vm.search.page = typeof page === 'undefined' ? vm.search.page : page;
@@ -120,6 +132,12 @@
                 },
                 form: function (id) {
                     var vm = this;
+                    // 如果是禁用的DNS服务，阻止提交
+                    if (vm.isDisabled(vm.storeInfo.dns)) {
+                        vm.$message('此DNS服务提供商当前版本不可用', 'error');
+                        return;
+                    }
+                    
                     this.$post("/admin/config/dns", $("#form-" + id).serialize())
                         .then(function (data) {
                             if (data.status === 0) {
@@ -148,6 +166,22 @@
             mounted: function () {
                 this.getList();
                 this.getAllDns();
+                
+                // 初始化Cloudflare启用状态
+                if (typeof window.enableCloudflare === 'undefined') {
+                    window.enableCloudflare = false;
+                }
+                
+                // 监听控制台变量变化
+                Object.defineProperty(window, 'enableCloudflare', {
+                    set: function(newValue) {
+                        this._enableCloudflare = newValue;
+                        console.log('Cloudflare ' + (newValue ? '已启用' : '已禁用'));
+                    },
+                    get: function() {
+                        return this._enableCloudflare;
+                    }
+                });
             }
         });
     </script>
